@@ -51,8 +51,8 @@ object DutchStemmer {
    */
   def step1(input:Payload):Payload = {
     if(input.word.endsWith("heden")) { // separated into two if-statements to skip 'heden' as a word
-	  if(input.R1.endsWith("heden"))
-	  	return Payload(input.word.replaceAll("heden$","heid"),  "replaced 'heden' by 'heid'" :: input.history)
+      if(input.R1.endsWith("heden"))
+        return Payload(input.word.replaceAll("heden$","heid"),  "replaced 'heden' by 'heid'" :: input.history)
     } else if(input.validEnEnding) {
       return Payload(removeDuplicateEndings(input.word.replaceAll("ene?$","")), "'en(e)' removed" :: input.history)
     } else if(input.validSEnding) {
