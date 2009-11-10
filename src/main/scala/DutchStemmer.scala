@@ -125,7 +125,12 @@ object DutchStemmer {
       case _ => Payload(removeDuplicateEndings(input >> suffix), ("removed " + suffix) :: input.history)
     }
   }
- 
+
+  /**
+   * Step 4: undouble vowel
+   *
+   * If the words ends CVD, where C is a non-vowel, D is a non-vowel other than I, and V is double a, e, o or u, remove one of the vowels from V (for example, maan -> man, brood -> brod). 
+   */
   def step4(input:Payload):Payload = {
     val doesNotEndWithVowelOrI = """.*[^yaieouèI]$""".r
     input.word match {
