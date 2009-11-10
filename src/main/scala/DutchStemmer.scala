@@ -103,13 +103,13 @@ object DutchStemmer {
    */
   private val endsWithIgButNotEig = """.*[^e]ig$|^ig$""".r
   def step3b(input:Payload):Payload = {
-	val endsWithIngOrEnd = """(.*)(ing|end)$""".r
-	val endsWithLijk = """(.*)(lijk)$""".r
-	val endsWithBar = """(.*)(bar)$""".r
-	val endsWithBaar = """(.*)(baar)$""".r
+    val endsWithIngOrEnd = """(.*)(ing|end)$""".r
+    val endsWithLijk = """(.*)(lijk)$""".r
+    val endsWithBar = """(.*)(bar)$""".r
+    val endsWithBaar = """(.*)(baar)$""".r
 	
-	val initR2 = input.R2
-	input.R2 match {
+    val initR2 = input.R2
+    input.R2 match {
       case endsWithIngOrEnd(rest, suffix)  => processIngOrEnd(rest, suffix, input)
       case endsWithIgButNotEig()           => Payload(input >> "ig", ("3b removed 'ig'") :: input.history)
       case endsWithLijk(rest, suffix)      => Payload(step2(Payload(input >> suffix, input.history)).word, "removed 'lijk" :: input.history)
@@ -127,19 +127,19 @@ object DutchStemmer {
   }
  
   def step4(input:Payload):Payload = {
-	val doesNotEndWithVowelOrI = """.*[^yaieouèI]$""".r
-	input.word match {
-		case doesNotEndWithVowelOrI() => Payload(checkForDuplicateVowelSuffix(input.word), "removed last character" :: input.history)
-		case _ => input
-	}
+    val doesNotEndWithVowelOrI = """.*[^yaieouèI]$""".r
+    input.word match {
+      case doesNotEndWithVowelOrI() => Payload(checkForDuplicateVowelSuffix(input.word), "removed last character" :: input.history)
+      case _ => input
+    }
   }
  
   private def checkForDuplicateVowelSuffix(word:String):String = {
-	val duplicateVowel = """(.*[^yaieouè])(ee|aa|oo|uu)$""".r
-	word >> 1 match {
-	  case duplicateVowel(rest, suffix) => rest + suffix.last + word.last
-	  case _ => word
-	}
+    val duplicateVowel = """(.*[^yaieouè])(ee|aa|oo|uu)$""".r
+    word >> 1 match {
+      case duplicateVowel(rest, suffix) => rest + suffix.last + word.last
+      case _ => word
+    }
   }
  
   private def transposeAccent(c:Char):Char = {
