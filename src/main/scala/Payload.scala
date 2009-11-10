@@ -9,6 +9,8 @@ import scala.util.matching.Regex.Match
  */
 case class Payload(val word:String, val history:List[String] = Nil) {
   val regionExpr = """.*?[yaieouè][^yaieouè](.+)""".r // string after first non-vowel following a vowel
+  /** finds the region Some(Match) after the first non-vowel following a vowel, or None if there is no such non-vowel. */
+  def findRegion(input:String) = regionExpr.findFirstMatchIn(input)
 
   val R1 = findRegion(word) match {
     case Some(m:Match) => { // Adjust R1 according to German stemming rules: "so that the region before it contains at least 3 letters"
@@ -34,14 +36,15 @@ case class Payload(val word:String, val history:List[String] = Nil) {
   /** returns true if character before 's' in the input is not a vowel and not 'j' */
   def validSEnding:Boolean = R1.matches(""".*se?$""") && !DutchStemmer.isVowel(charBeforeLast("s")) && charBeforeLast("s") != 'j'
 
-  /** finds the region Some(Match) after the first non-vowel following a vowel, or None if there is no such non-vowel. */
-  def findRegion(input:String) = regionExpr.findFirstMatchIn(input)
   /** returns the character before the given suffix. */
   def charBefore(suffix:String) = if(suffix.length < word.length)  word.charAt(word.size - suffix.size - 1) else ' '
+
   /** returns the last character before the given string */
   def charBeforeLast(str:String) = word.charAt(word.lastIndexOf(str)-1)
+
   /** like binary right-shift, drop num characters from the end of the string */
   def >> (num:Int) = word.substring(0, word.length - num)
-  /** like binary right-shift, drop other.size characters from the end of the string */
+ 
+ /** like binary right-shift, drop other.size characters from the end of the string */
   def >> (other:String) = word.substring(0, word.length - other.size)  
 }

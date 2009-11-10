@@ -2,45 +2,6 @@ package com.log4p
 
 import scala.util.matching.Regex.Match
 
-case class Payload(val word:String, val history:List[String] = Nil) {
-  val regionExpr = """.*?[yaieouè][^yaieouè](.+)""".r // string after first non-vowel following a vowel
-
-  val R1 = findRegion(word) match {
-    case Some(m:Match) => { // Adjust R1 according to German stemming rules: "so that the region before it contains at least 3 letters"
-        if(m.start(1) < 3)
-           if(word.length > 3) word.substring(3, word.length) else ""
-        else
-          m.group(1)
-    }
-    case None => ""
-  }
-
-  val R2 = findRegion(word) match {
-    case Some(m:Match) => findRegion(m.group(1)) match {
-        case Some(second:Match) => second.group(1)
-        case None => ""
-    }
-    case None => ""
-  }
-
-  /** returns true if character before 'en' or 'ene' in the input is not a vowel, and not 'gem' */
-  def validEnEnding:Boolean = R1.matches(""".*ene?$""") && !DutchStemmer.isVowel(charBeforeLast("en")) && !word.matches(".*gemene?$")
-
-  /** returns true if character before 's' in the input is not a vowel and not 'j' */
-  def validSEnding:Boolean = R1.matches(""".*se?$""") && !DutchStemmer.isVowel(charBeforeLast("s")) && charBeforeLast("s") != 'j'
-
-  /** finds the region Some(Match) after the first non-vowel following a vowel, or None if there is no such non-vowel. */
-  def findRegion(input:String) = regionExpr.findFirstMatchIn(input)
-  /** returns the character before the given suffix. */
-  def charBefore(suffix:String) = if(suffix.length < word.length)  word.charAt(word.size - suffix.size - 1) else ' '
-  /** returns the last character before the given string */
-  def charBeforeLast(str:String) = word.charAt(word.lastIndexOf(str)-1)
-  /** like binary right-shift, drop num characters from the end of the string */
-  def >> (num:Int) = word.substring(0, word.length - num)
-  /** like binary right-shift, drop other.size characters from the end of the string */
-  def >> (other:String) = word.substring(0, word.length - other.size)  
-}
-
 /**
  * Implementation of a stemming algorithm for the Dutch language.
  *
@@ -81,6 +42,13 @@ object DutchStemmer {
   /** removes one character from the end of the string if the end matches kk, dd or tt */ 
   def removeDuplicateEndings(input:Payload):String = if(input.word.matches(".*(kk|dd|tt)$")) input.word >> 1 else input.word
   
+  /**
+   * Search for the longest among the following suffixes, and perform the action indicated
+   *
+   * heden:  replace with heid if in R1
+   * en/ene: delete if in R1 and preceded by a valid en-ending, and then undouble the ending
+   * s/se:   delete if in R1 and preceded by a valid s-ending 
+   */
   def step1(input:Payload):Payload = {
     if(input.word.endsWith("heden")) { // separated into two if-statements to skip 'heden' as a word
 	  if(input.R1.endsWith("heden"))
@@ -93,6 +61,11 @@ object DutchStemmer {
     return input
   }
 
+  /**
+   * Step 2
+   * 
+   * Delete suffix e if in R1 and preceded by a non-vowel, and then undouble the ending
+   */
   def step2(input:Payload):Payload = {
     if(input.R1.endsWith("e") && !isVowel(input.charBefore("e"))) 
       Payload(removeDuplicateEndings(input >> 1), "step 2 removed e" :: input.history) 
@@ -100,6 +73,11 @@ object DutchStemmer {
       input
   }
 
+  /**
+   * Step 3a
+   *
+   * delete heid if in R2 and not preceded by c, and treat a preceding en as in step 1(b)
+   */
   def step3a(input:Payload):Payload = {
     if(input.R2.endsWith("heid") && input.charBefore("heid") != 'c'){ // delete 'heid' if in R2 and not preceded by c
       val res = input >> "heid"
@@ -112,13 +90,24 @@ object DutchStemmer {
       input
   }
 
-  val endsWithIngOrEnd = """(.*)(ing|end)$""".r
-  val endsWithLijk = """(.*)(lijk)$""".r
-  val endsWithBar = """(.*)(bar)$""".r
-  val endsWithBaar = """(.*)(baar)$""".r
-  val endsWithIgButNotEig = """.*[^e]ig$|^ig$""".r
-
+  /**  
+   * Step 3b: d-suffixes (*)
+   *
+   * Search for the longest among the following suffixes, and perform the action indicated.
+   *
+   * end/ing: delete if in R2, if preceded by ig, delete if in R2 and not preceded by e, otherwise undouble the ending
+   * ig:      delete if in R2 and not preceded by e
+   * lijk:    delete if in R2, and then repeat step 2
+   * baar:    delete if in R2
+   * bar:     delete if in R2 and if step 2 actually removed an e (!) 
+   */
+  private val endsWithIgButNotEig = """.*[^e]ig$|^ig$""".r
   def step3b(input:Payload):Payload = {
+	val endsWithIngOrEnd = """(.*)(ing|end)$""".r
+	val endsWithLijk = """(.*)(lijk)$""".r
+	val endsWithBar = """(.*)(bar)$""".r
+	val endsWithBaar = """(.*)(baar)$""".r
+	
 	val initR2 = input.R2
 	input.R2 match {
       case endsWithIngOrEnd(rest, suffix)  => processIngOrEnd(rest, suffix, input)
@@ -137,10 +126,8 @@ object DutchStemmer {
     }
   }
  
-  val duplicateVowel = """(.*[^yaieouè])(ee|aa|oo|uu)$""".r
-  val doesNotEndWithVowelOrI = """.*[^yaieouèI]$""".r
-
   def step4(input:Payload):Payload = {
+	val doesNotEndWithVowelOrI = """.*[^yaieouèI]$""".r
 	input.word match {
 		case doesNotEndWithVowelOrI() => Payload(checkForDuplicateVowelSuffix(input.word), "removed last character" :: input.history)
 		case _ => input
@@ -148,6 +135,7 @@ object DutchStemmer {
   }
  
   private def checkForDuplicateVowelSuffix(word:String):String = {
+	val duplicateVowel = """(.*[^yaieouè])(ee|aa|oo|uu)$""".r
 	word >> 1 match {
 	  case duplicateVowel(rest, suffix) => rest + suffix.last + word.last
 	  case _ => word
