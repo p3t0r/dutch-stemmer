@@ -18,5 +18,5 @@ define "dutch_stemmer" do
 
   project.version = VERSION_NUMBER
   project.group = GROUP
-  manifest["Implementation-Vendor"] = COPYRIGHT
+  manifest["Peter Maas"] = COPYRIGHT
 end
