@@ -1,0 +1,40 @@
+h1. Dutch Stemmer
+
+h2. Scala implementation of a Dutch stemming algorithm
+
+Implementation of the stemming algorithm as documented at http://snowball.tartarus.org/algorithms/dutch/stemmer.html
+My aim was to make a stateless implementation which passes the tests to learn how the program Scala. The current version still has a couple of methods which probably could be refactored to be a little consiser; still working in that.
+
+h2. Prerequisites
+
+* buildr 1.4.0 (head) (all tests pass, but buildr seems to timeout incorrectly)
+* scala 2.8.0.r19281-b20091026023411 (should work with more recent versions as well)
+
+h2. Usage
+
+call method DutchStemmer#stem with a string as argument and you get the stemmed version in return. See the tests in DutchStemmerTestSuite.scala.
+
+h2. Author
+
+Written by Peter Maas
+
+* http://www.twitter.com/p3t0r
+* http://log4p.com
+
+h1. License
+
+<pre>
+This software is licensed under the Apache 2 license, quoted below.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not
+use this file except in compliance with the License. You may obtain a copy of
+the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+License for the specific language governing permissions and limitations under
+the License.
+</pre>
