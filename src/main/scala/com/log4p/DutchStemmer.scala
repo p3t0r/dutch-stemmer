@@ -11,20 +11,17 @@ import scala.util.matching.Regex.Match
  * @author Peter Maas (pfmmaas [at] gmail [dot] com)
  */
 object DutchStemmer {
-  import Vowels._	
+  import Accents._	
   implicit def str2payload(s:String) = Payload(s)
 
   /** returns the stem of the given input*/
-  def stem(input:String):Payload = {
-    pipeline.foldLeft(Payload(input)) { (previousOutput, step) =>
-      step.apply(previousOutput)
-    }
-  }
-
+  def stem(input:String):Payload = processorChain.foldLeft(Payload(input)) { (previousOutput, step) => step.apply(previousOutput) }
+  
   val iBetweenVowels = "([yaieouè]+)i([yaieouè]+)"
   val yAfterVowels = "([yaieouè]+)y"
 
-  private val pipeline = List(
+  /** a list of all functions which should be applied to the input consequently */
+  private val processorChain = List(
       {p:Payload => Payload(p.word.toLowerCase, "lowercased" :: p.history)},
       {p:Payload => Payload(transpostAccents(p.word), "remapped accents" :: p.history)},  // First, remove all umlaut and acute accents. A vowel is then one of 'aeiouyè'
       {p:Payload => p.copy(word = p.word.replaceAll(iBetweenVowels,"$1I$2"))},            // Put i between vowels into upper case
