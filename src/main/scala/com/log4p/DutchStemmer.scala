@@ -12,29 +12,30 @@ import scala.util.matching.Regex.Match
  */
 object DutchStemmer {
   import Accents._	
+  import com.log4p.Pipeline
+
   implicit def str2payload(s:String) = Payload(s)
 
-  /** returns the stem of the given input*/
-  def stem(input:String):Payload = processorChain.foldLeft(Payload(input)) { (previousOutput, step) => step.apply(previousOutput) }
-  
   val iBetweenVowels = "([yaieouè]+)i([yaieouè]+)"
   val yAfterVowels = "([yaieouè]+)y"
 
-  /** a list of all functions which should be applied to the input consequently */
-  private val processorChain = List(
-      {p:Payload => Payload(p.word.toLowerCase, "lowercased" :: p.history)},
-      {p:Payload => Payload(transpostAccents(p.word), "remapped accents" :: p.history)},  // First, remove all umlaut and acute accents. A vowel is then one of 'aeiouyè'
-      {p:Payload => p.copy(word = p.word.replaceAll(iBetweenVowels,"$1I$2"))},            // Put i between vowels into upper case
-      {p:Payload => p.copy(word = p.word.replaceAll("^y","Y"))},                          // Put y at the beginning into upper case
-      {p:Payload => p.copy(word = p.word.replaceAll(yAfterVowels,"$1Y"))},                // Put y after a vowel into upper case
-      step1(_:Payload),
-      step2(_:Payload),
-      step3a(_:Payload),
-      step3b(_:Payload),
-      step4(_:Payload),
-      {p:Payload => Payload(p.word.toLowerCase, "lowercased" :: p.history)}
-    )
-
+  /** returns the stem of the given input*/
+  def stem(input:String):Payload = {
+	Pipeline(
+		{p:Payload => Payload(p.word.toLowerCase, "lowercased" :: p.history)},
+		{p:Payload => Payload(transpostAccents(p.word), "remapped accents" :: p.history)},
+	    {p:Payload => p.copy(word = p.word.replaceAll(iBetweenVowels,"$1I$2"))},
+		{p:Payload => p.copy(word = p.word.replaceAll("^y","Y"))},
+		{p:Payload => p.copy(word = p.word.replaceAll(yAfterVowels,"$1Y"))},	
+		step1(_:Payload),
+		step2(_:Payload),
+		step3a(_:Payload),
+		step3b(_:Payload),
+		step4(_:Payload),
+		{p:Payload => Payload(p.word.toLowerCase, "lowercased" :: p.history)}
+	) exec Payload(input)
+  }
+  
   /** removes one character from the end of the string if the end matches kk, dd or tt */ 
   def removeDuplicateEndings(input:Payload):String = if(input.word.matches(".*(kk|dd|tt)$")) input.word >> 1 else input.word
   
