@@ -26,9 +26,9 @@ object DutchStemmer {
   private val pipeline = List(
       {p:Payload => Payload(p.word.toLowerCase, "lowercased" :: p.history)},
       {p:Payload => Payload(remapAccentedVowels(p), "remapped accents" :: p.history)},  // First, remove all umlaut and acute accents. A vowel is then one of 'aeiouyè'
-      {p:Payload => Payload(p.word.replaceAll(iBetweenVowels,"$1I$2"), p.history)},     // Put i between vowels into upper case
-      {p:Payload => Payload(p.word.replaceAll("^y","Y"), p.history)},                   // Put y at the beginning into upper case
-      {p:Payload => Payload(p.word.replaceAll(yAfterVowels,"$1Y"), p.history)},         // Put y after a vowel into upper case
+      {p:Payload => p.copy(word = p.word.replaceAll(iBetweenVowels,"$1I$2"))},          // Put i between vowels into upper case
+      {p:Payload => p.copy(word = p.word.replaceAll("^y","Y"))},                        // Put y at the beginning into upper case
+      {p:Payload => p.copy(word = p.word.replaceAll(yAfterVowels,"$1Y"))},              // Put y after a vowel into upper case
       step1(_:Payload),
       step2(_:Payload),
       step3a(_:Payload),
