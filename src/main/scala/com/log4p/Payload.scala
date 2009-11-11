@@ -2,12 +2,15 @@ package com.log4p
 
 import scala.util.matching.Regex.Match
 
+
 /**
  * Payload object is passed through the stemming pipeline. It contains various helper methods which a used by the algorithm.
  *
  * @author Peter Maas (pfmmaas [at] gmail [dot] com)
  */
 case class Payload(val word:String, val history:List[String] = Nil) {
+  import Accents._
+	
   val regionExpr = """.*?[yaieouè][^yaieouè](.+)""".r // string after first non-vowel following a vowel
   /** finds the region Some(Match) after the first non-vowel following a vowel, or None if there is no such non-vowel. */
   def findRegion(input:String) = regionExpr.findFirstMatchIn(input)
@@ -31,10 +34,10 @@ case class Payload(val word:String, val history:List[String] = Nil) {
   }
 
   /** returns true if character before 'en' or 'ene' in the input is not a vowel, and not 'gem' */
-  def validEnEnding:Boolean = R1.matches(""".*ene?$""") && !DutchStemmer.isVowel(charBeforeLast("en")) && !word.matches(".*gemene?$")
+  def validEnEnding:Boolean = R1.matches(""".*ene?$""") && !isVowel(charBeforeLast("en")) && !word.matches(".*gemene?$")
 
   /** returns true if character before 's' in the input is not a vowel and not 'j' */
-  def validSEnding:Boolean = R1.matches(""".*se?$""") && !DutchStemmer.isVowel(charBeforeLast("s")) && charBeforeLast("s") != 'j'
+  def validSEnding:Boolean = R1.matches(""".*se?$""") && !isVowel(charBeforeLast("s")) && charBeforeLast("s") != 'j'
 
   /** returns the character before the given suffix. */
   def charBefore(suffix:String) = if(suffix.length < word.length)  word.charAt(word.size - suffix.size - 1) else ' '

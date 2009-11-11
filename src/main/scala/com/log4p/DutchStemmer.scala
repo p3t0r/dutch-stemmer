@@ -11,6 +11,7 @@ import scala.util.matching.Regex.Match
  * @author Peter Maas (pfmmaas [at] gmail [dot] com)
  */
 object DutchStemmer {
+  import Vowels._	
   implicit def str2payload(s:String) = Payload(s)
 
   /** returns the stem of the given input*/
@@ -25,10 +26,10 @@ object DutchStemmer {
 
   private val pipeline = List(
       {p:Payload => Payload(p.word.toLowerCase, "lowercased" :: p.history)},
-      {p:Payload => Payload(remapAccentedVowels(p), "remapped accents" :: p.history)},  // First, remove all umlaut and acute accents. A vowel is then one of 'aeiouyè'
-      {p:Payload => p.copy(word = p.word.replaceAll(iBetweenVowels,"$1I$2"))},          // Put i between vowels into upper case
-      {p:Payload => p.copy(word = p.word.replaceAll("^y","Y"))},                        // Put y at the beginning into upper case
-      {p:Payload => p.copy(word = p.word.replaceAll(yAfterVowels,"$1Y"))},              // Put y after a vowel into upper case
+      {p:Payload => Payload(transpostAccents(p.word), "remapped accents" :: p.history)},  // First, remove all umlaut and acute accents. A vowel is then one of 'aeiouyè'
+      {p:Payload => p.copy(word = p.word.replaceAll(iBetweenVowels,"$1I$2"))},            // Put i between vowels into upper case
+      {p:Payload => p.copy(word = p.word.replaceAll("^y","Y"))},                          // Put y at the beginning into upper case
+      {p:Payload => p.copy(word = p.word.replaceAll(yAfterVowels,"$1Y"))},                // Put y after a vowel into upper case
       step1(_:Payload),
       step2(_:Payload),
       step3a(_:Payload),
@@ -37,8 +38,6 @@ object DutchStemmer {
       {p:Payload => Payload(p.word.toLowerCase, "lowercased" :: p.history)}
     )
 
-  /** remaps all accented vowel in the input string to the specified counterparts */
-  def remapAccentedVowels(input:Payload):String = input.word.toCharArray.map(transposeAccent(_)).mkString
   /** removes one character from the end of the string if the end matches kk, dd or tt */ 
   def removeDuplicateEndings(input:Payload):String = if(input.word.matches(".*(kk|dd|tt)$")) input.word >> 1 else input.word
   
@@ -144,35 +143,6 @@ object DutchStemmer {
     word >> 1 match {
       case duplicateVowel(rest, suffix) => rest + suffix.last + word.last
       case _ => word
-    }
-  }
- 
-  private def transposeAccent(c:Char):Char = {
-    c match {
-      case 'ä' => 'a'
-      case 'ë' => 'e'
-      case 'ï' => 'i'
-      case 'ö' => 'o'
-      case 'ü' => 'u'
-      case 'á' => 'a'
-      case 'é' => 'e'
-      case 'í' => 'i'
-      case 'ó' => 'o'
-      case 'ú' => 'u'
-      case  _  => c // other accents, like è and à should remain untouched
-    }
-  }
-
-  def isVowel(c:Char):Boolean = {
-    c match {
-      case 'a' => true
-      case 'e' => true
-      case 'i' => true
-      case 'o' => true
-      case 'u' => true
-      case 'y' => true
-      case 'è' => true
-      case  _  => false
     }
   }
 }
