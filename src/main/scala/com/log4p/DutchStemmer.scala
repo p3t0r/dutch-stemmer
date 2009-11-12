@@ -33,7 +33,7 @@ object DutchStemmer {
 		step3b(_:Payload),
 		step4(_:Payload),
 		{p:Payload => Payload(p.word.toLowerCase, "lowercased" :: p.history)}
-	) exec Payload(input)
+	) exec input
   }
   
   /** removes one character from the end of the string if the end matches kk, dd or tt */ 
