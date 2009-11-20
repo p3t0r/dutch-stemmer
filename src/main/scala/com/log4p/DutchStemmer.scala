@@ -24,7 +24,7 @@ object DutchStemmer {
 	Pipeline(
 		{p:Payload => Payload(p.word.toLowerCase, "lowercased" :: p.history)},
 		{p:Payload => Payload(transpostAccents(p.word), "remapped accents" :: p.history)},
-	    {p:Payload => p.copy(word = p.word.replaceAll(iBetweenVowels,"$1I$2"))},
+	        {p:Payload => p.copy(word = p.word.replaceAll(iBetweenVowels,"$1I$2"))},
 		{p:Payload => p.copy(word = p.word.replaceAll("^y","Y"))},
 		{p:Payload => p.copy(word = p.word.replaceAll(yAfterVowels,"$1Y"))},	
 		step1(_:Payload),
