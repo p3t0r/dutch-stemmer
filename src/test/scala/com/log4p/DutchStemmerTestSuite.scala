@@ -14,23 +14,23 @@ class DutchStemmerTestSuite extends FunSuite {
 
   test("R2 should be the part after the first non-vowel after a vowel with R1") {
     assert(Payload("sinterklaas").R2 === "klaas")
-	assert(Payload("kostenvergelijking").R2 === "vergelijking")
-	assert(Payload("aanmatigend").R2 === "igend")
+    assert(Payload("kostenvergelijking").R2 === "vergelijking")
+    assert(Payload("aanmatigend").R2 === "igend")
   } 
 
   test("kostenvergelijking->kostenvergelijk") {
-	val stem = DutchStemmer.stem("kostenvergelijking")
-	assert(stem.word === "kostenvergelijk", "failed stemming, path is: %s".format(stem))
+    val stem = DutchStemmer.stem("kostenvergelijking")
+    assert(stem.word === "kostenvergelijk", "failed stemming, path is: %s".format(stem))
   }
 
   test("aanmatigend->aanmat") {
-	val stem = DutchStemmer.stem("aanmatigend")
-	assert(stem.word === "aanmat", "failed stemming, path is: %s".format(stem))
+    val stem = DutchStemmer.stem("aanmatigend")
+    assert(stem.word === "aanmat", "failed stemming, path is: %s".format(stem))
   }
 
   test("gebiedseigen->gebiedseig") {
-  	val stem = DutchStemmer.stem("gebiedseigen")
-  	assert(stem.word === "gebiedseig", "failed stemming, path is: %s".format(stem))
+    val stem = DutchStemmer.stem("gebiedseigen")
+    assert(stem.word === "gebiedseig", "failed stemming, path is: %s".format(stem))
   }
 
   test("verify supplied vocabulary") {
