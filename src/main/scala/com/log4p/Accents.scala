@@ -1,9 +1,9 @@
 package com.log4p
 
 object Accents {
-	
-  /** remaps all accented vowel in the input string to the specified counterparts */	
-  def transpostAccents(s:String):String = s.toCharArray.map(transposeAccent(_)).mkString
+
+  /** remaps all accented vowel in the input string to the specified counterparts */
+  def transposeAccents(s:String):String = s.toCharArray.map(transposeAccent(_)).mkString
 	
   def transposeAccent(c:Char):Char = {
     c match {

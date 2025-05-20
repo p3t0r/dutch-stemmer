@@ -36,14 +36,12 @@ class DutchStemmerTestSuite extends AnyFunSuite {
   test("verify supplied vocabulary") {
     val doc = XML.loadFile("src/test/resources/test_input.xml")
     val tests = (doc \ "test")
-    var count = 0
-    tests.foreach { ele =>
+    tests.zipWithIndex.foreach { case (ele, count) =>
       val input = ele.attribute("input").get.toString
       val output = ele.attribute("output").get.toString
       val stem = DutchStemmer.stem(input)
-  
+
       assert(stem.word === output, "failed stemming[%s->%s] at: %d %s".format(input, output, count, stem))
-      count = count + 1
     }
   }
 }
