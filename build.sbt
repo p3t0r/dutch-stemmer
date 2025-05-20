@@ -1,6 +1,6 @@
 ThisBuild / organization := "dutch_stemmer"
 ThisBuild / version := "1.0.0"
-ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / scalaVersion := "3.4.1"
 
 name := "dutch-stemmer"
 

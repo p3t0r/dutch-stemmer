@@ -8,7 +8,7 @@ My aim was to make a stateless implementation which passes the tests to learn ho
 h2. Prerequisites
 
 * sbt 1.9.x
-* Scala 2.13.x
+* Scala 3.x
 
 h2. Usage
 
