@@ -105,13 +105,15 @@ object DutchStemmer {
     val endsWithBar = """(.*)(bar)$""".r
     val endsWithBaar = """(.*)(baar)$""".r
 	
-    val initR2 = input.R2
     input.R2 match {
       case endsWithIngOrEnd(rest, suffix)  => processIngOrEnd(rest, suffix, input)
       case endsWithIgButNotEig()           => Payload(input >> "ig", ("3b removed 'ig'") :: input.history)
-      case endsWithLijk(rest, suffix)      => Payload(step2(Payload(input >> suffix, input.history)).word, "removed 'lijk" :: input.history)
+      case endsWithLijk(rest, suffix)      => {
+        val afterStep2 = step2(Payload(input >> suffix, input.history))
+        Payload(afterStep2.word, "removed 'lijk'" :: afterStep2.history)
+      }
       case endsWithBar(rest, suffix)       => if(input.history.contains("step 2 removed e")) Payload(input >> suffix, "removed 'bar'" :: input.history) else input
-      case endsWithBaar(rest, suffix)      => Payload(input >> suffix, "removed 'baar" :: input.history)
+      case endsWithBaar(rest, suffix)      => Payload(input >> suffix, "removed 'baar'" :: input.history)
       case _ => input
     }
   }
