@@ -1,7 +1,6 @@
 package com.log4p
 
 import scala.util.matching.Regex.Match
-import scala.language.implicitConversions
 
 /**
  * Implementation of a stemming algorithm for the Dutch language.
@@ -14,8 +13,6 @@ import scala.language.implicitConversions
 object DutchStemmer {
   import Accents._	
   import com.log4p.Pipeline
-
-  implicit def str2payload(s: String): Payload = Payload(s)
 
   private val iBetweenVowels = "([yaieouè]+)i([yaieouè]+)".r
   private val yAfterVowels = "([yaieouè]+)y".r
@@ -37,7 +34,7 @@ object DutchStemmer {
   def stem(input:String):Payload = {
         Pipeline(
                 {(p: Payload) => Payload(p.word.toLowerCase, "lowercased" :: p.history)},
-                {(p: Payload) => Payload(transpostAccents(p.word), "remapped accents" :: p.history)},
+                {(p: Payload) => Payload(transposeAccents(p.word), "remapped accents" :: p.history)},
                 {(p: Payload) => p.copy(word = iBetweenVowels.replaceAllIn(p.word, "$1I$2"))},
                 {(p: Payload) => p.copy(word = startWithY.replaceFirstIn(p.word, "Y"))},
                 {(p: Payload) => p.copy(word = yAfterVowels.replaceAllIn(p.word, "$1Y"))},
@@ -47,7 +44,7 @@ object DutchStemmer {
                 step3b(_:Payload),
                 step4(_:Payload),
                 {(p: Payload) => Payload(p.word.toLowerCase, "lowercased" :: p.history)}
-        ).exec(input)
+        ).exec(Payload(input))
   }
   
   /** removes one character from the end of the string if the end matches kk, dd or tt */ 
@@ -62,15 +59,18 @@ object DutchStemmer {
    * s/se:   delete if in R1 and preceded by a valid s-ending 
    */
   def step1(input:Payload):Payload = {
-    if(input.word.endsWith("heden")) { // separated into two if-statements to skip 'heden' as a word
-      if(input.R1.endsWith("heden"))
-        return Payload(hedenSuffix.replaceFirstIn(input.word, "heid"),  "replaced 'heden' by 'heid'" :: input.history)
-    } else if(input.validEnEnding) {
-      return Payload(removeDuplicateEndings(eneEnding.replaceFirstIn(input.word, "")), "'en(e)' removed" :: input.history)
-    } else if(input.validSEnding) {
-      return Payload(seEnding.replaceFirstIn(input.word, ""), "removed ending se?" :: input.history)
+    if (input.word.endsWith("heden")) { // separated into two if-statements to skip 'heden' as a word
+      if (input.R1.endsWith("heden"))
+        Payload(hedenSuffix.replaceFirstIn(input.word, "heid"), "replaced 'heden' by 'heid'" :: input.history)
+      else
+        input
+    } else if (input.validEnEnding) {
+      Payload(removeDuplicateEndings(eneEnding.replaceFirstIn(input.word, "")), "'en(e)' removed" :: input.history)
+    } else if (input.validSEnding) {
+      Payload(seEnding.replaceFirstIn(input.word, ""), "removed ending se?" :: input.history)
+    } else {
+      input
     }
-    return input
   }
 
   /**
