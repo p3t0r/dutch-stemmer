@@ -1,9 +1,9 @@
 package com.log4p
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import scala.xml._
 
-class DutchStemmerTestSuite extends FunSuite {
+class DutchStemmerTestSuite extends AnyFunSuite {
   test("R1 should be the part after the first non-vowel after a vowel") {
     assert(Payload("sinterklaas").R1 === "terklaas")
   }
