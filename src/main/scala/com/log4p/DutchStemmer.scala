@@ -47,9 +47,9 @@ object DutchStemmer {
         ).exec(Payload(input))
   }
   
-  /** removes one character from the end of the string if the end matches kk, dd or tt */ 
-  def removeDuplicateEndings(input:Payload):String =
-    if (duplicateEndingPattern.matches(input.word)) input.word >> 1 else input.word
+  /** removes one character from the end of the string if the end matches kk, dd or tt */
+  def removeDuplicateEndings(input:String):String =
+    if (duplicateEndingPattern.matches(input)) input.substring(0, input.length - 1) else input
   
   /**
    * Search for the longest among the following suffixes, and perform the action indicated
@@ -92,11 +92,11 @@ object DutchStemmer {
    */
   def step3a(input:Payload):Payload = {
     if(input.R2.endsWith("heid") && input.charBefore("heid") != 'c'){ // delete 'heid' if in R2 and not preceded by c
-      val res = input >> "heid"
+      val res = Payload(input >> "heid", input.history)
       if(res.validEnEnding)
         Payload(removeDuplicateEndings(eneEnding.replaceFirstIn(res.word, "")), "step3a removed 'en(e)'" :: input.history )
       else
-        Payload(res, input.history)
+        res
     }
     else
       input
@@ -148,7 +148,7 @@ object DutchStemmer {
   }
  
   private def checkForDuplicateVowelSuffix(word:String):String = {
-    word >> 1 match {
+    word.substring(0, word.length - 1) match {
       case duplicateVowel(rest, suffix) => rest + suffix.last + word.last
       case _ => word
     }
