@@ -1,0 +1,7 @@
+# SBT
+target/
+project/target/
+project/project/
+
+# Scala
+*.class

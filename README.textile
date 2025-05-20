@@ -7,12 +7,13 @@ My aim was to make a stateless implementation which passes the tests to learn ho
 
 h2. Prerequisites
 
-* buildr 1.4.0 (head) (all tests pass, but buildr seems to timeout incorrectly)
-* scala 2.8.0.r19281-b20091026023411 (should work with more recent versions as well)
+* sbt 1.9.x
+* Scala 2.13.x
 
 h2. Usage
 
 call method DutchStemmer#stem with a string as argument and you get the stemmed version in return. See the tests in DutchStemmerTestSuite.scala.
+Use `sbt test` to run the unit tests.
 
 h2. Author
 
