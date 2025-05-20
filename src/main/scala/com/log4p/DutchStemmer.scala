@@ -22,19 +22,19 @@ object DutchStemmer {
 
   /** returns the stem of the given input*/
   def stem(input:String):Payload = {
-	Pipeline(
-		{p:Payload => Payload(p.word.toLowerCase, "lowercased" :: p.history)},
-		{p:Payload => Payload(transpostAccents(p.word), "remapped accents" :: p.history)},
-	        {p:Payload => p.copy(word = p.word.replaceAll(iBetweenVowels,"$1I$2"))},
-		{p:Payload => p.copy(word = p.word.replaceAll("^y","Y"))},
-		{p:Payload => p.copy(word = p.word.replaceAll(yAfterVowels,"$1Y"))},	
-		step1(_:Payload),
-		step2(_:Payload),
-		step3a(_:Payload),
-		step3b(_:Payload),
-		step4(_:Payload),
-		{p:Payload => Payload(p.word.toLowerCase, "lowercased" :: p.history)}
-	) exec input
+        Pipeline(
+                {(p: Payload) => Payload(p.word.toLowerCase, "lowercased" :: p.history)},
+                {(p: Payload) => Payload(transpostAccents(p.word), "remapped accents" :: p.history)},
+                {(p: Payload) => p.copy(word = p.word.replaceAll(iBetweenVowels,"$1I$2"))},
+                {(p: Payload) => p.copy(word = p.word.replaceAll("^y","Y"))},
+                {(p: Payload) => p.copy(word = p.word.replaceAll(yAfterVowels,"$1Y"))},
+                step1(_:Payload),
+                step2(_:Payload),
+                step3a(_:Payload),
+                step3b(_:Payload),
+                step4(_:Payload),
+                {(p: Payload) => Payload(p.word.toLowerCase, "lowercased" :: p.history)}
+        ) exec input
   }
   
   /** removes one character from the end of the string if the end matches kk, dd or tt */ 
