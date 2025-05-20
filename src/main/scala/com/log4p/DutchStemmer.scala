@@ -17,17 +17,30 @@ object DutchStemmer {
 
   implicit def str2payload(s: String): Payload = Payload(s)
 
-  val iBetweenVowels = "([yaieouè]+)i([yaieouè]+)"
-  val yAfterVowels = "([yaieouè]+)y"
+  private val iBetweenVowels = "([yaieouè]+)i([yaieouè]+)".r
+  private val yAfterVowels = "([yaieouè]+)y".r
+
+  private val duplicateEndingPattern = """.*(kk|dd|tt)$""".r
+  private val endsWithIgButNotEig = """.*[^e]ig$|^ig$""".r
+  private val endsWithIngOrEnd = """(.*)(ing|end)$""".r
+  private val endsWithLijk = """(.*)(lijk)$""".r
+  private val endsWithBar = """(.*)(bar)$""".r
+  private val endsWithBaar = """(.*)(baar)$""".r
+  private val doesNotEndWithVowelOrI = """.*[^yaieouèI]$""".r
+  private val duplicateVowel = """(.*[^yaieouè])(ee|aa|oo|uu)$""".r
+  private val hedenSuffix = "heden$".r
+  private val eneEnding = "ene?$".r
+  private val seEnding = "se?$".r
+  private val startWithY = "^y".r
 
   /** returns the stem of the given input*/
   def stem(input:String):Payload = {
         Pipeline(
                 {(p: Payload) => Payload(p.word.toLowerCase, "lowercased" :: p.history)},
                 {(p: Payload) => Payload(transpostAccents(p.word), "remapped accents" :: p.history)},
-                {(p: Payload) => p.copy(word = p.word.replaceAll(iBetweenVowels,"$1I$2"))},
-                {(p: Payload) => p.copy(word = p.word.replaceAll("^y","Y"))},
-                {(p: Payload) => p.copy(word = p.word.replaceAll(yAfterVowels,"$1Y"))},
+                {(p: Payload) => p.copy(word = iBetweenVowels.replaceAllIn(p.word, "$1I$2"))},
+                {(p: Payload) => p.copy(word = startWithY.replaceFirstIn(p.word, "Y"))},
+                {(p: Payload) => p.copy(word = yAfterVowels.replaceAllIn(p.word, "$1Y"))},
                 step1(_:Payload),
                 step2(_:Payload),
                 step3a(_:Payload),
@@ -38,7 +51,8 @@ object DutchStemmer {
   }
   
   /** removes one character from the end of the string if the end matches kk, dd or tt */ 
-  def removeDuplicateEndings(input:Payload):String = if(input.word.matches(".*(kk|dd|tt)$")) input.word >> 1 else input.word
+  def removeDuplicateEndings(input:Payload):String =
+    if (duplicateEndingPattern.matches(input.word)) input.word >> 1 else input.word
   
   /**
    * Search for the longest among the following suffixes, and perform the action indicated
@@ -50,11 +64,11 @@ object DutchStemmer {
   def step1(input:Payload):Payload = {
     if(input.word.endsWith("heden")) { // separated into two if-statements to skip 'heden' as a word
       if(input.R1.endsWith("heden"))
-        return Payload(input.word.replaceAll("heden$","heid"),  "replaced 'heden' by 'heid'" :: input.history)
+        return Payload(hedenSuffix.replaceFirstIn(input.word, "heid"),  "replaced 'heden' by 'heid'" :: input.history)
     } else if(input.validEnEnding) {
-      return Payload(removeDuplicateEndings(input.word.replaceAll("ene?$","")), "'en(e)' removed" :: input.history)
+      return Payload(removeDuplicateEndings(eneEnding.replaceFirstIn(input.word, "")), "'en(e)' removed" :: input.history)
     } else if(input.validSEnding) {
-      return Payload(input.word.replaceAll("se?$",""), "removed ending se?" :: input.history)
+      return Payload(seEnding.replaceFirstIn(input.word, ""), "removed ending se?" :: input.history)
     }
     return input
   }
@@ -79,9 +93,9 @@ object DutchStemmer {
   def step3a(input:Payload):Payload = {
     if(input.R2.endsWith("heid") && input.charBefore("heid") != 'c'){ // delete 'heid' if in R2 and not preceded by c
       val res = input >> "heid"
-      if(res.validEnEnding) 
-        Payload(removeDuplicateEndings(res.replaceAll("ene?$","")), "step3a removed 'en(e)'" :: input.history ) 
-      else 
+      if(res.validEnEnding)
+        Payload(removeDuplicateEndings(eneEnding.replaceFirstIn(res.word, "")), "step3a removed 'en(e)'" :: input.history )
+      else
         Payload(res, input.history)
     }
     else
@@ -99,12 +113,7 @@ object DutchStemmer {
    * baar:    delete if in R2
    * bar:     delete if in R2 and if step 2 actually removed an e (!) 
    */
-  private val endsWithIgButNotEig = """.*[^e]ig$|^ig$""".r
   def step3b(input:Payload):Payload = {
-    val endsWithIngOrEnd = """(.*)(ing|end)$""".r
-    val endsWithLijk = """(.*)(lijk)$""".r
-    val endsWithBar = """(.*)(bar)$""".r
-    val endsWithBaar = """(.*)(baar)$""".r
 	
     input.R2 match {
       case endsWithIngOrEnd(rest, suffix)  => processIngOrEnd(rest, suffix, input)
@@ -132,7 +141,6 @@ object DutchStemmer {
    * If the words ends CVD, where C is a non-vowel, D is a non-vowel other than I, and V is double a, e, o or u, remove one of the vowels from V (for example, maan -> man, brood -> brod). 
    */
   def step4(input:Payload):Payload = {
-    val doesNotEndWithVowelOrI = """.*[^yaieouèI]$""".r
     input.word match {
       case doesNotEndWithVowelOrI() => Payload(checkForDuplicateVowelSuffix(input.word), "removed last character" :: input.history)
       case _ => input
@@ -140,7 +148,6 @@ object DutchStemmer {
   }
  
   private def checkForDuplicateVowelSuffix(word:String):String = {
-    val duplicateVowel = """(.*[^yaieouè])(ee|aa|oo|uu)$""".r
     word >> 1 match {
       case duplicateVowel(rest, suffix) => rest + suffix.last + word.last
       case _ => word
