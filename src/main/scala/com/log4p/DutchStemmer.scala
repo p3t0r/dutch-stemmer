@@ -15,7 +15,7 @@ object DutchStemmer {
   import Accents._	
   import com.log4p.Pipeline
 
-  implicit def str2payload(s:String) = Payload(s)
+  implicit def str2payload(s: String): Payload = Payload(s)
 
   val iBetweenVowels = "([yaieouè]+)i([yaieouè]+)"
   val yAfterVowels = "([yaieouè]+)y"
