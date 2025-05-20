@@ -1,6 +1,7 @@
 package com.log4p
 
 import scala.util.matching.Regex.Match
+import scala.language.implicitConversions
 
 /**
  * Implementation of a stemming algorithm for the Dutch language.
